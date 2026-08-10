@@ -67,7 +67,7 @@ class ChartSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Text('${e.key}'),
+                Text(e.key),
               ],
             );
           }).toList(),

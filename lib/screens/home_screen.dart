@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/expense_provider.dart';
 import '../widgets/chart_section.dart';
 import '../widgets/expense_card.dart';
+import '../widgets/stats_row.dart';
 import 'add_expense_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -25,10 +26,12 @@ class HomeScreen extends StatelessWidget {
 
           final expenses = provider.expenses;
           final total = provider.totalExpenses;
+          final categoryTotals = provider.categoryTotals;
           final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
 
           return CustomScrollView(
             slivers: [
+              // 1. Total balance gradient card
               SliverToBoxAdapter(
                 child: Container(
                   margin: const EdgeInsets.all(16),
@@ -45,7 +48,7 @@ class HomeScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -78,6 +81,15 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
+
+              // 2. NEW (Lab 02): Quick-stats Row — Today / Week / Month / Avg
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: StatsRow(expenses: expenses),
+                ),
+              ),
+
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -91,7 +103,7 @@ class HomeScreen extends StatelessWidget {
               ),
               SliverToBoxAdapter(
                 child: ChartSection(
-                  categoryTotals: provider.categoryTotals,
+                  categoryTotals: categoryTotals,
                   total: total,
                 ),
               ),
@@ -124,8 +136,13 @@ class HomeScreen extends StatelessWidget {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final expense = expenses[index];
+                      // Compute this expense's category share of total spend
+                      // so the Stack badge in ExpenseCard can render it.
+                      final catTotal = categoryTotals[expense.category] ?? 0;
+                      final pct = total > 0 ? (catTotal / total) * 100 : 0.0;
                       return ExpenseCard(
                         expense: expense,
+                        categoryPercentage: pct,
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
