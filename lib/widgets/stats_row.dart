@@ -4,15 +4,13 @@ import '../models/expense.dart';
 
 /// Quick-stats strip showing Today / Week / Month / Average spend.
 ///
-/// Layout demonstration (Lab 02):
-///   Row                      ← horizontal arrangement
-///     ├─ Expanded(child: _StatCard(...))
-///     ├─ Expanded(child: _StatCard(...))
-///     ├─ Expanded(child: _StatCard(...))
-///     └─ Expanded(child: _StatCard(...))
+/// Lab 02 base: `Row` → 4 × `Expanded` → `Column`.
 ///
-/// Each _StatCard is a Column of label (small grey text) + value (bold).
-/// Expanded inside Row gives each card equal width regardless of screen size.
+/// Lab 03 enhancement: On screens narrower than 360 dp the four
+/// `Expanded` cards become too cramped.  A [LayoutBuilder] wraps the
+/// row; when `constraints.maxWidth < 360` we switch from a single `Row`
+/// to a [Wrap] that lets cards flow onto a second line (2 per row).
+/// This demonstrates the responsive use of `Wrap` alongside `Expanded`.
 class StatsRow extends StatelessWidget {
   final List<Expense> expenses;
 
@@ -41,48 +39,45 @@ class StatsRow extends StatelessWidget {
         monthTotal += e.amount;
       }
     }
-    final avg = expenses.isEmpty ? 0.0 : expenses.fold(0.0, (s, e) => s + e.amount) / expenses.length;
+    final avg = expenses.isEmpty
+        ? 0.0
+        : expenses.fold(0.0, (s, e) => s + e.amount) / expenses.length;
 
-    // Row → 4 × Expanded → each Expanded holds a Column (label + value)
-    // NOTE: Do NOT use crossAxisAlignment: stretch here — inside a
-    // SliverToBoxAdapter the Row would expand to fill all remaining vertical
-    // space and push subsequent slivers (chart, expense list) off-screen.
+    final cards = [
+      _StatCard(label: 'Today', value: fmt.format(todayTotal), accent: Colors.orange),
+      _StatCard(label: 'This Week', value: fmt.format(weekTotal), accent: Colors.blue),
+      _StatCard(label: 'This Month', value: fmt.format(monthTotal), accent: Colors.green),
+      _StatCard(label: 'Avg / Txn', value: fmt.format(avg), accent: Colors.purple),
+    ];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatCard(
-              label: 'Today',
-              value: fmt.format(todayTotal),
-              accent: Colors.orange,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _StatCard(
-              label: 'This Week',
-              value: fmt.format(weekTotal),
-              accent: Colors.blue,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _StatCard(
-              label: 'This Month',
-              value: fmt.format(monthTotal),
-              accent: Colors.green,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _StatCard(
-              label: 'Avg / Txn',
-              value: fmt.format(avg),
-              accent: Colors.purple,
-            ),
-          ),
-        ],
+      // ── LayoutBuilder: choose Row (>= 360 dp) or Wrap (< 360 dp)
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 360) {
+            // Wrap: cards flow to next line — responsive fallback
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: cards
+                  .map((c) => SizedBox(
+                        width: (constraints.maxWidth - 8) / 2,
+                        child: c,
+                      ))
+                  .toList(),
+            );
+          }
+          // Row → 4 × Expanded (default, Lab 02 behaviour)
+          return Row(
+            children: [
+              for (int i = 0; i < cards.length; i++) ...[
+                Expanded(child: cards[i]),
+                if (i < cards.length - 1) const SizedBox(width: 8),
+              ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -110,23 +105,15 @@ class _StatCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500)),
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: accent,
-              ),
-            ),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.bold, color: accent)),
           ],
         ),
       ),
