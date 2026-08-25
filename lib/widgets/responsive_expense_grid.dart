@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../models/expense.dart';
-import '../widgets/expense_card.dart';
+import 'expense_card.dart';
 
 /// Lab 03 — Responsive expense grid for the tablet/web layout.
 ///

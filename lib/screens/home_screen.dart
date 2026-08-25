@@ -225,13 +225,13 @@ class HomeScreen extends StatelessWidget {
                     final crossAxisCount =
                         orientation == Orientation.portrait ? 2 : 3;
                     if (expenses.isEmpty) {
-                      return Center(
+                      return const Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.receipt_long, size: 64, color: Colors.grey),
-                            const SizedBox(height: 16),
-                            const Text('No expenses yet. Tap + to add one.'),
+                            Icon(Icons.receipt_long, size: 64, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text('No expenses yet. Tap + to add one.'),
                           ],
                         ),
                       );
